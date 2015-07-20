@@ -79,9 +79,9 @@ QString VlcInstance::libVersion()
     version.append(QString("Unknown"));
 #endif //LIBVLCQT_VERSION
 
-#if defined(LIBVLCQT_VERSION_PATCH)
-    if(QString(LIBVLCQT_VERSION_PATCH) != "0" && QString(LIBVLCQT_VERSION_PATCH) != "") {
-        version.append("-" + QString(LIBVLCQT_VERSION_PATCH));
+#if defined(LIBVLCQT_VERSION_VCS)
+    if(QString(LIBVLCQT_VERSION_VCS) != "0" && QString(LIBVLCQT_VERSION_VCS) != "") {
+        version.append("-" + QString(LIBVLCQT_VERSION_VCS));
     }
 #endif //LIBVLCQT_VERSION
 
@@ -92,7 +92,7 @@ int VlcInstance::libVersionMajor()
 {
     int version = -1;
 #if defined(LIBVLCQT_VERSION_MAJOR)
-    version = QString(LIBVLCQT_VERSION_MAJOR).toInt();
+    version = LIBVLCQT_VERSION_MAJOR;
 #endif //LIBVLCQT_VERSION
 
     return version;
@@ -102,7 +102,7 @@ int VlcInstance::libVersionMinor()
 {
     int version = -1;
 #if defined(LIBVLCQT_VERSION_MINOR)
-    version = QString(LIBVLCQT_VERSION_MINOR).toInt();
+    version = LIBVLCQT_VERSION_MINOR;
 #endif //LIBVLCQT_VERSION
 
     return version;

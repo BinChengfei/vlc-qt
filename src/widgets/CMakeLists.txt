@@ -30,8 +30,8 @@ ENDIF()
 
 IF(MINGW OR MSVC)
     CONFIGURE_FILE(
-        ${CMAKE_SOURCE_DIR}/src/platform/windows/widgets.rc.in
-        ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.rc
+        ${CMAKE_SOURCE_DIR}/platform/windows/widgets.rc.in
+        ${CMAKE_BINARY_DIR}/platform/windows/widgets.rc
     )
 ENDIF()
 
@@ -76,17 +76,17 @@ ENDIF()
 # Compile resources with windres
 IF(MINGW)
     ADD_CUSTOM_COMMAND(
-        OUTPUT ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.obj
+        OUTPUT ${CMAKE_BINARY_DIR}/platform/windows/widgets.obj
         COMMAND ${CMAKE_RC_COMPILER}
-        -i ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.rc
-        -o ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.obj
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/src/platform/windows"
+        -i ${CMAKE_BINARY_DIR}/platform/windows/widgets.rc
+        -o ${CMAKE_BINARY_DIR}/platform/windows/widgets.obj
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/platform/windows"
     )
-    SET(VLCQT_WIDGETS_SRCS ${VLCQT_WIDGETS_SRCS} ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.obj)
+    SET(VLCQT_WIDGETS_SRCS ${VLCQT_WIDGETS_SRCS} ${CMAKE_BINARY_DIR}/platform/windows/widgets.obj)
 ENDIF()
 
 IF(MSVC)
-    SET(VLCQT_WIDGETS_SRCS ${VLCQT_WIDGETS_SRCS} ${CMAKE_BINARY_DIR}/src/platform/windows/widgets.rc)
+    SET(VLCQT_WIDGETS_SRCS ${VLCQT_WIDGETS_SRCS} ${CMAKE_BINARY_DIR}/platform/windows/widgets.rc)
 ENDIF()
 
 # Create the library.
@@ -96,7 +96,7 @@ ELSE()
     ADD_LIBRARY(${VLCQT_WIDGETS} SHARED ${VLCQT_WIDGETS_SRCS})
 ENDIF()
 
-ADD_DEPENDENCIES(${VLCQT_WIDGETS} ${VLCQT})
+ADD_DEPENDENCIES(${VLCQT_WIDGETS} ${VLCQT_CORE})
 
 # Debug suffix
 IF(DEBUG_SUFFIX)
@@ -116,15 +116,15 @@ ENDIF()
 # Linux/Mac: So version extensions
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     SET_TARGET_PROPERTIES(${VLCQT_WIDGETS} PROPERTIES VERSION ${VLCQT_VERSION}
-                                                      SOVERSION "${VLCQT_VERSION_MAJOR}.${VLCQT_VERSION_MINOR}"
+                                                      SOVERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
     )
 ENDIF()
 
 # Link the required libraries
 IF(QT_VERSION MATCHES 4)
-    TARGET_LINK_LIBRARIES(${VLCQT_WIDGETS} ${VLCQT_BINARY} Qt4::Gui)
+    TARGET_LINK_LIBRARIES(${VLCQT_WIDGETS} ${VLCQT_CORE_BINARY} Qt4::QtGui)
 ELSE()
-    TARGET_LINK_LIBRARIES(${VLCQT_WIDGETS} ${VLCQT_BINARY} Qt5::Widgets)
+    TARGET_LINK_LIBRARIES(${VLCQT_WIDGETS} ${VLCQT_CORE_BINARY} Qt5::Widgets)
 ENDIF()
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND WITH_X11)
@@ -140,3 +140,13 @@ INSTALL(TARGETS ${VLCQT_WIDGETS} RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib${LIB_SUFFIX}
 )
 INSTALL(FILES ${VLCQT_WIDGETS_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/vlc-qt)
+
+IF(${BUILD_TESTS})
+    IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        INSTALL(TARGETS ${VLCQT_WIDGETS} RUNTIME DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/bin
+                LIBRARY DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/lib${LIB_SUFFIX}
+                ARCHIVE DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/lib${LIB_SUFFIX}
+        )
+        INSTALL(FILES ${VLCQT_WIDGETS_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/${VLCQT_TEST}.app/Contents/MacOS/include/vlc-qt)
+    ENDIF()
+ENDIF()

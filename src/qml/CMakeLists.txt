@@ -30,8 +30,8 @@ ENDIF()
 
 IF(MINGW OR MSVC)
     CONFIGURE_FILE(
-        ${CMAKE_SOURCE_DIR}/src/platform/windows/qml.rc.in
-        ${CMAKE_BINARY_DIR}/src/platform/windows/qml.rc
+        ${CMAKE_SOURCE_DIR}/platform/windows/qml.rc.in
+        ${CMAKE_BINARY_DIR}/platform/windows/qml.rc
     )
 ENDIF()
 
@@ -76,26 +76,21 @@ INCLUDE_DIRECTORIES(
     ${LIBVLC_INCLUDE_DIR}/vlc/plugins
 )
 
-IF(MSVC)
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/windows/msvc)
-ELSEIF(MINGW)
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/windows/mingw)
-ENDIF()
 
 # Compile resources with windres
 IF(MINGW)
     ADD_CUSTOM_COMMAND(
-        OUTPUT ${CMAKE_BINARY_DIR}/src/platform/windows/qml.obj
+        OUTPUT ${CMAKE_BINARY_DIR}/platform/windows/qml.obj
         COMMAND ${CMAKE_RC_COMPILER}
-        -i ${CMAKE_BINARY_DIR}/src/platform/windows/qml.rc
-        -o ${CMAKE_BINARY_DIR}/src/platform/windows/qml.obj
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/src/platform/windows"
+        -i ${CMAKE_BINARY_DIR}/platform/windows/qml.rc
+        -o ${CMAKE_BINARY_DIR}/platform/windows/qml.obj
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/platform/windows"
     )
-    SET(VLCQT_QML_SRCS ${VLCQT_QML_SRCS} ${CMAKE_BINARY_DIR}/src/platform/windows/qml.obj)
+    SET(VLCQT_QML_SRCS ${VLCQT_QML_SRCS} ${CMAKE_BINARY_DIR}/platform/windows/qml.obj)
 ENDIF()
 
 IF(MSVC)
-    SET(VLCQT_QML_SRCS ${VLCQT_QML_SRCS} ${CMAKE_BINARY_DIR}/src/platform/windows/qml.rc)
+    SET(VLCQT_QML_SRCS ${VLCQT_QML_SRCS} ${CMAKE_BINARY_DIR}/platform/windows/qml.rc)
 ENDIF()
 
 # Create the library.
@@ -105,7 +100,7 @@ ELSE()
     ADD_LIBRARY(${VLCQT_QML} SHARED ${VLCQT_QML_SRCS})
 ENDIF()
 
-ADD_DEPENDENCIES(${VLCQT_QML} ${VLCQT})
+ADD_DEPENDENCIES(${VLCQT_QML} ${VLCQT_CORE})
 
 # Debug suffix
 IF(DEBUG_SUFFIX)
@@ -130,12 +125,12 @@ ENDIF()
 # Linux/Mac: So version extensions
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     SET_TARGET_PROPERTIES(${VLCQT_QML} PROPERTIES VERSION ${VLCQT_VERSION}
-                                                  SOVERSION "${VLCQT_VERSION_MAJOR}.${VLCQT_VERSION_MINOR}"
+                                                  SOVERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
     )
 ENDIF()
 
 # Link the required libraries
-TARGET_LINK_LIBRARIES(${VLCQT_QML} Qt5::Quick ${VLCQT_BINARY} ${LIBVLCCORE_LIBRARY})
+TARGET_LINK_LIBRARIES(${VLCQT_QML} Qt5::Quick ${VLCQT_CORE_BINARY} ${LIBVLCCORE_LIBRARY})
 
 IF(WITH_GLES)
     IF(MSVC)
@@ -163,3 +158,13 @@ INSTALL(TARGETS ${VLCQT_QML} RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib${LIB_SUFFIX}
 )
 INSTALL(FILES ${VLCQT_QML_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/vlc-qt)
+
+IF(${BUILD_TESTS})
+    IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        INSTALL(TARGETS ${VLCQT_QML} RUNTIME DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/bin
+                LIBRARY DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/lib${LIB_SUFFIX}
+                ARCHIVE DESTINATION ${VLCQT_TEST}.app/Contents/MacOS/lib${LIB_SUFFIX}
+        )
+        INSTALL(FILES ${VLCQT_QML_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/${VLCQT_TEST}.app/Contents/MacOS/include/vlc-qt)
+    ENDIF()
+ENDIF()
